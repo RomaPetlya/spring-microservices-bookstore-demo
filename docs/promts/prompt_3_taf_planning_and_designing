@@ -1,0 +1,105 @@
+# Prompt 3: Design & Plan API Test Automation Framework (TAF)
+
+You are an **Advanced QA Automation Copilot**.
+
+Your goal is to design and plan a **Test Automation Framework (TAF)** for the project’s API layer — including **REST**, **GraphQL**, and **inter-service integration** tests — using best industry practices.
+
+---
+
+## Step 0 — Context and Input
+
+Use the following context files:
+- `/docs/prompts/0_project_context.md` — project architecture and overview  
+- `/docs/prompts/1_test_strategy.md` — testing strategy, goals, and priorities  
+- `/docs/outputs/2_rest_api_test_cases.md` — defined REST, GraphQL, and integration API test cases  
+
+Analyze these files to fully understand:
+- The architecture and technology stack of the project  
+- The testing goals, priorities, and constraints  
+- The nature and complexity of the defined test cases  
+
+---
+
+## Step 1 — Select Optimal Tech Stack
+
+1. Review the test strategy and the system’s implementation language and stack.  
+2. Choose the **most suitable automation stack** for API testing — for example:
+   - **Python** → `pytest`, `requests`, `pytest-allure`, `pytest-asyncio`
+   - **JavaScript/TypeScript** → `Playwright`, `Supertest`, `Allure`
+   - **Java** → `RestAssured`, `JUnit5`, `Allure`
+   - **C#** → `xUnit`, `RestSharp`, `Allure`
+   - **Other** — if the strategy or codebase suggests a different stack
+
+3. Justify the selected stack based on:
+   - Project language compatibility
+   - Framework maturity and ecosystem
+   - CI/CD integration ease
+   - Reporting and extensibility
+   - Parallel execution and maintainability
+
+---
+
+## Step 2 — Framework Design and Structure
+
+Analyze `/docs/outputs/2_rest_api_test_cases.md` and design a clean, modular framework architecture.
+
+Produce a **structure plan** (save to `/docs/outputs/3_taf_structure.md`) that includes:
+- Project folder structure (e.g. `/tests/api`, `/core`, `/data`, `/utils`, `/reports`)
+- Logical grouping of tests by service/module
+- Test data management strategy (fixtures, JSON files, DB mocks, etc.)
+- Environment configuration (base URLs, tokens, secrets)
+- Common API client layer or wrapper (e.g., RequestManager)
+- Logging and reporting setup (e.g., Allure)
+- Hooks for CI/CD integration
+
+Follow principles like:
+- Separation of test logic and data
+- Reusable components and utility layers
+- Config-driven test execution
+- Scalability for additional services and API types
+
+---
+
+## Step 3 — Implementation Plan
+
+Create a step-by-step **implementation roadmap** (save to `/docs/outputs/3_taf_plan.md`) describing how the TAF will be built.
+
+Each step should include:
+| Step | Description | Expected Output | Dependencies | Priority |
+|------|--------------|-----------------|--------------|-----------|
+
+Include key phases like:
+1. Environment setup and dependency configuration  
+2. Framework scaffolding and folder structure creation  
+3. Core API client and utilities implementation  
+4. Authentication and environment handling  
+5. Test case automation (based on `/2_rest_api_test_cases.md`)  
+6. Allure or equivalent reporting integration  
+7. CI/CD pipeline integration  
+8. Parallel and parameterized execution support  
+9. Documentation and onboarding guide  
+
+---
+
+## Step 4 — Framework Readiness and Automation Guidelines
+
+At the end, provide a summary section (saved in `/docs/outputs/3_taf_summary.md`) that includes:
+- Justification of chosen tools and libraries  
+- Expected scalability and maintenance approach  
+- How to onboard new test engineers  
+- Recommendations for data mocking, stubbing, or sandbox environments  
+- Best practices for future test extension (e.g., performance, contract, security)
+
+---
+
+## Step 5 — Validation
+
+Before finalizing:
+- Verify that the proposed TAF structure fully supports REST, GraphQL, and inter-service integration testing  
+- Ensure compatibility with CI/CD pipelines and test data management  
+- Confirm automation readiness of all generated test cases  
+- Check that folder structure and naming conventions align with project standards  
+
+---
+
+You can now start designing and planning the API Test Automation Framework based on the provided documentation and test cases.
