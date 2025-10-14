@@ -13,3 +13,14 @@ eureka:
 spring:
   kafka:
     bootstrap-servers: broker:29092
+    template:
+      default-topic: messageTopic
+    consumer:
+      group-id: messageId
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            type:
+              mapping: event:com.chrisbaileydeveloper.messageservice.OrderPlacedEvent

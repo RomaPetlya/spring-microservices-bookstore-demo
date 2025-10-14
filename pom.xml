@@ -69,6 +69,7 @@
                     <to>
                         <image>microservices-bookstore/${project.artifactId}</image>
                     </to>
+                    <allowInsecureRegistries>true</allowInsecureRegistries>
                 </configuration>
                 <executions>
                     <execution>
