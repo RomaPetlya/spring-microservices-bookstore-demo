@@ -1,0 +1,19 @@
+{
+  "authors": [
+    {
+      "name": "Jane Austen",
+      "bio": "Jane Austen was an English novelist known primarily for her six major novels, which interpret, critique and comment upon the British landed gentry at the end of the 18th century.",
+      "email": "jane.austen@example.com"
+    },
+    {
+      "name": "George Orwell",
+      "bio": "Eric Arthur Blair, known by his pen name George Orwell, was an English novelist, essayist, journalist and critic. His work is marked by lucid prose, awareness of social injustice, opposition to totalitarianism, and outspoken support of democratic socialism.",
+      "email": "george.orwell@example.com"
+    },
+    {
+      "name": "Ernest Hemingway",
+      "bio": "Ernest Miller Hemingway was an American novelist, short-story writer, journalist, and sportsman. His economical and understated style—which he termed the iceberg theory—had a strong influence on 20th-century fiction.",
+      "email": "ernest.hemingway@example.com"
+    }
+  ]
+}

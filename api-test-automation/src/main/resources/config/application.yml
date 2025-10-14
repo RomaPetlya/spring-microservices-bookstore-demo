@@ -1,0 +1,28 @@
+services:
+  book-service:
+    url: http://localhost:8081
+    graphql-endpoint: /graphql
+  author-service:
+    url: http://localhost:8085
+  order-service:
+    url: http://localhost:8082
+  stock-check-service:
+    url: http://localhost:8083
+  message-service:
+    url: http://localhost:8084
+  api-gateway:
+    url: http://localhost:8080
+  kafka:
+    bootstrap-servers: localhost:9092
+    topics:
+      order-placed: messageTopic
+
+test:
+  retry:
+    max-attempts: 3
+    backoff-ms: 1000
+  timeout:
+    default-seconds: 10
+    integration-seconds: 30
+  parallel:
+    threads: 4

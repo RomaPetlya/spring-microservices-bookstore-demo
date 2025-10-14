@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="BookStore Integration Test Suite" parallel="none">
+    <test name="Integration Tests">
+        <classes>
+            <class name="com.bookstore.tests.integration.EndToEndIntegrationTests"/>
+        </classes>
+    </test>
+</suite>

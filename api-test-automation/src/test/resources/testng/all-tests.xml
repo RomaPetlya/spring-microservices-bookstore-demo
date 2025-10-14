@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="BookStore Complete Test Suite" parallel="tests" thread-count="2">
+    <test name="Service API Tests" parallel="classes" thread-count="3">
+        <classes>
+            <class name="com.bookstore.tests.author.AuthorServiceTests"/>
+            <class name="com.bookstore.tests.book.BookServiceTests"/>
+            <class name="com.bookstore.tests.stock.StockCheckServiceTests"/>
+            <class name="com.bookstore.tests.order.OrderServiceTests"/>
+        </classes>
+    </test>
+    <test name="Integration Tests">
+        <classes>
+            <class name="com.bookstore.tests.integration.EndToEndIntegrationTests"/>
+        </classes>
+    </test>
+</suite>

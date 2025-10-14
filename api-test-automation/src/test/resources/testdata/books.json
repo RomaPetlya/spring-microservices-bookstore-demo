@@ -1,0 +1,25 @@
+{
+  "books": [
+    {
+      "name": "Pride and Prejudice",
+      "description": "Pride and Prejudice is a romantic novel by Jane Austen, published in 1813. The story charts the emotional development of Elizabeth Bennet, who learns the error of making hasty judgments.",
+      "price": 15.99,
+      "authorId": null,
+      "skuCode": "SKU-12345"
+    },
+    {
+      "name": "1984",
+      "description": "1984 is a dystopian social science fiction novel by English novelist George Orwell. It was published in 1949 as Orwell's ninth and final book completed in his lifetime.",
+      "price": 12.50,
+      "authorId": null,
+      "skuCode": "SKU-23456"
+    },
+    {
+      "name": "The Old Man and the Sea",
+      "description": "The Old Man and the Sea is a short novel written by Ernest Hemingway in 1951. It was the last major work of fiction by Hemingway that was published during his lifetime.",
+      "price": 9.99,
+      "authorId": null,
+      "skuCode": "SKU-34567"
+    }
+  ]
+}

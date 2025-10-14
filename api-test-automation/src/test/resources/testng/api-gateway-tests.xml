@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="API Gateway Test Suite">
+    <test name="API Gateway Integration Tests" parallel="classes" thread-count="1">
+        <classes>
+            <class name="com.bookstore.tests.gateway.ApiGatewayIntegrationTests"/>
+        </classes>
+    </test>
+</suite>

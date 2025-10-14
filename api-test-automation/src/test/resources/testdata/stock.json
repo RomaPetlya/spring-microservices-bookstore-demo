@@ -1,0 +1,16 @@
+{
+  "stock": [
+    {
+      "skuCode": "SKU-12345",
+      "quantity": 25
+    },
+    {
+      "skuCode": "SKU-23456",
+      "quantity": 42
+    },
+    {
+      "skuCode": "SKU-34567",
+      "quantity": 15
+    }
+  ]
+}

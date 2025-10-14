@@ -1,0 +1,31 @@
+{
+  "orders": [
+    {
+      "orderNumber": "ORD-123456",
+      "customerEmail": "customer1@example.com",
+      "orderItems": [
+        {
+          "skuCode": "SKU-12345",
+          "price": 15.99,
+          "quantity": 2
+        },
+        {
+          "skuCode": "SKU-23456",
+          "price": 12.50,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "orderNumber": "ORD-234567",
+      "customerEmail": "customer2@example.com",
+      "orderItems": [
+        {
+          "skuCode": "SKU-34567",
+          "price": 9.99,
+          "quantity": 3
+        }
+      ]
+    }
+  ]
+}
