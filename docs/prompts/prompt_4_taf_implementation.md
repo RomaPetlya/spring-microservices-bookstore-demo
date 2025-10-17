@@ -1,0 +1,31 @@
+# Prompt 4: Implement Test Automation Framework (REST + GraphQL APIs)
+
+You are an **Senior SDET**.  
+Your goal is to implement a **production-ready Test Automation Framework (TAF)** for E2E API testing based on the provided test cases, plan, and architecture summary.
+
+---
+
+## Input Context
+
+Use and analyze the following context files before implementation:
+
+- `/docs/outputs/2_e2e_api_Test_cases.md` — list of REST & GraphQL API test cases  
+- `/docs/outputs/3_taf_plan.md` — step-by-step framework implementation plan  
+- `/docs/outputs/3_taf_structure.md` - Framework structure plan
+---
+
+## Step 1 — Analyze and Prepare
+
+1. Parse all input files and understand:
+   - Which stack and frameworks should be used.
+   - Which services and endpoints will be tested.
+   - What code structure is expected (based on the plan).
+   - Naming conventions and folder layout described in the summary.
+2. Identify dependencies and tools to install (e.g., pytest, requests, allure-pytest, gql).
+3. If critical details are missing (e.g., base URLs, env structure, credentials handling), ask clarifying questions before coding.
+
+---
+
+## Step 2 — Implement the Framework Structure
+
+You can now start implementing step by step from `/docs/outputs/3_taf_plan.md` plan API Test Automation Framework based on the provided documentation and test cases.
