@@ -1,0 +1,38 @@
+# Test Artifacts and Generated Files
+target/
+*.log
+logs/
+
+# Allure Reports
+allure-results/
+allure-report/
+
+# IDE Files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Test Data
+test-data-*.json
+test-output/
+
+# Temporary Files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# JaCoCo Coverage Reports
+jacoco.exec
+*.exec
