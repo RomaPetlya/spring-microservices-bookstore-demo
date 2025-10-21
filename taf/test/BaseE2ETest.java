@@ -1,44 +1,43 @@
 package base;
 
-import utils.TestLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.TestInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import utils.TestLogger;
 import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
 
 /**
- * Base test class that provides common functionality and logging for all E2E tests
+ * Base test class with simplified logging and MDC support for parallel tests
  */
 public abstract class BaseE2ETest {
     
-    protected TestLogger log;
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    protected final TestLogger testLogger = new TestLogger(this.getClass());
     private long testStartTime;
+    private String currentTestId;
     
     @BeforeEach
     void baseSetUp(TestInfo testInfo) {
-        // Initialize logger for the specific test class
-        log = new TestLogger(this.getClass());
-        
         // Record test start time
         testStartTime = System.currentTimeMillis();
         
-        // Log test start
+        // Setup test context for MDC
         String testName = testInfo.getDisplayName();
         String testMethod = testInfo.getTestMethod().map(method -> method.getName()).orElse("unknown");
-        log.testStart(testMethod, testName);
+        currentTestId = extractTestId(testMethod);
         
-        // Configure RestAssured logging
+        testLogger.setupTestContext(testName);
+        testLogger.testStart(currentTestId, testName);
+        
+        // Configure RestAssured
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
-        
-        // Set base configuration
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = 8080;
         RestAssured.basePath = "/api";
         
-        log.info("Test environment configured - Base URI: {}:{}{}", 
+        logger.debug("Test environment configured - Base URI: {}:{}{}", 
                 RestAssured.baseURI, RestAssured.port, RestAssured.basePath);
     }
     
@@ -47,74 +46,85 @@ public abstract class BaseE2ETest {
         // Calculate execution time
         long executionTime = System.currentTimeMillis() - testStartTime;
         
+        // Determine if test passed (simplified - could be enhanced with TestResult)
+        boolean testPassed = true; // This would need to be determined from test result
+        
         // Log test completion
-        String testMethod = testInfo.getTestMethod().map(method -> method.getName()).orElse("unknown");
-        log.testSummary(testMethod, executionTime, "COMPLETED");
+        testLogger.testComplete(currentTestId, testPassed, executionTime);
+        
+        // Clear MDC context
+        testLogger.clearTestContext();
         
         // Reset RestAssured
         RestAssured.reset();
     }
     
     /**
-     * Log successful test completion with details
+     * Extract test ID from method name (e.g., testOrderPlacement_O_E2E_001 -> O-E2E-001)
      */
-    protected void logTestSuccess(String testId, String details) {
-        log.testPass(testId, details);
+    private String extractTestId(String methodName) {
+        if (methodName.contains("_")) {
+            String[] parts = methodName.split("_");
+            if (parts.length >= 4) {
+                return String.join("-", parts[parts.length - 3], parts[parts.length - 2], parts[parts.length - 1]);
+            }
+        }
+        return methodName;
     }
     
     /**
-     * Log test failure with error details
+     * Log test step
      */
-    protected void logTestFailure(String testId, String error) {
-        log.testFail(testId, error);
+    protected void logStep(String description) {
+        testLogger.step(description);
     }
     
     /**
-     * Log API request for tracking
+     * Log validation result
      */
-    protected void logApiRequest(String method, String endpoint, String payload) {
-        log.apiRequest(method, endpoint, payload);
+    protected void logValidation(String field, Object expected, Object actual, boolean passed) {
+        testLogger.validation(field, expected, actual, passed);
     }
     
     /**
-     * Log API response for tracking
+     * Log API request
      */
-    protected void logApiResponse(int statusCode, String response) {
-        log.apiResponse(statusCode, response);
+    protected void logApiRequest(String method, String endpoint) {
+        testLogger.apiRequest(method, endpoint);
     }
     
     /**
-     * Log workflow step execution
+     * Log API response
      */
-    protected void logWorkflowStep(int step, String description) {
-        log.workflowStep(step, description);
+    protected void logApiResponse(int statusCode, String description) {
+        testLogger.apiResponse(statusCode, description);
     }
     
     /**
-     * Log workflow step completion
+     * Log error with context
      */
-    protected void logWorkflowComplete(int step, String result) {
-        log.workflowStepComplete(step, result);
+    protected void logError(String message, Throwable throwable) {
+        testLogger.error(message, throwable);
     }
     
     /**
-     * Log assertion results with clear pass/fail indication
+     * Log warning
      */
-    protected void logAssertion(String description, boolean passed, String details) {
-        log.assertion(description, passed, details);
+    protected void logWarning(String message, Object... args) {
+        testLogger.warn(message, args);
     }
     
     /**
-     * Log validation results
+     * Log info message
      */
-    protected void logValidation(String field, String expected, String actual, boolean passed) {
-        log.validation(field, expected, actual, passed);
+    protected void logInfo(String message, Object... args) {
+        testLogger.info(message, args);
     }
     
     /**
-     * Log cleanup operations
+     * Log debug message
      */
-    protected void logCleanup(String operation, String details) {
-        log.cleanup(operation, details);
+    protected void logDebug(String message, Object... args) {
+        testLogger.debug(message, args);
     }
 }

@@ -1,5 +1,6 @@
 package test;
 
+import base.BaseE2ETest;
 import client.RestClient;
 import config.TestConfig;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Feature("Book Service GraphQL")
 @Tag("e2e")
 @Tag("graphql")
-class BookServiceE2ETest {
+class BookServiceE2ETest extends BaseE2ETest {
 
     private static RestClient restClient;
     private static String baseUrl;
@@ -61,7 +62,7 @@ class BookServiceE2ETest {
         assertTrue(firstBook.has("name"), "Book should have name field");
         assertTrue(firstBook.has("price"), "Book should have price field");
         
-        System.out.println("âœ… B-E2E-001: Found " + books.size() + " books in catalog");
+        logInfo("B-E2E-001: Found {} books in catalog", books.size());
     }
 
     @Test
@@ -90,7 +91,7 @@ class BookServiceE2ETest {
         assertEquals("Test Description for E2E", createdBook.get("description").asText(), "Book description should match");
         assertEquals(19.99, createdBook.get("price").asDouble(), 0.01, "Book price should match");
         
-        System.out.println("âœ… B-E2E-002: Created book with ID: " + createdBook.get("id").asText());
+        logInfo("B-E2E-002: Created book with ID: {}", createdBook.get("id").asText());
     }
 
     @Test
@@ -118,7 +119,7 @@ class BookServiceE2ETest {
         assertTrue(data.has("deleteBook"), "Data should contain 'deleteBook' field");
         assertTrue(data.get("deleteBook").asBoolean(), "Delete operation should return true");
         
-        System.out.println("âœ… B-E2E-003: Successfully deleted book with ID: " + bookIdToDelete);
+        logInfo("B-E2E-003: Successfully deleted book with ID: {}", bookIdToDelete);
     }
 
     @Test
@@ -143,7 +144,7 @@ class BookServiceE2ETest {
         assertTrue(data.has("deleteBook"), "Data should contain 'deleteBook' field");
         assertFalse(data.get("deleteBook").asBoolean(), "Delete operation should return false for non-existent book");
         
-        log.testPass("B-E2E-004", "Correctly handled deletion of non-existent book");
+        logInfo("B-E2E-004: Correctly handled deletion of non-existent book");
     }
 
     @Test
@@ -164,7 +165,7 @@ class BookServiceE2ETest {
             if (response.has("errors")) {
                 assertTrue(response.get("errors").isArray(), "Errors should be an array");
                 assertTrue(response.get("errors").size() > 0, "Should have validation errors");
-                log.testPass("B-E2E-005", "GraphQL validation correctly rejected book without name");
+                logInfo("B-E2E-005: GraphQL validation correctly rejected book without name");
             } else {
                 fail("Expected GraphQL validation errors for book without name");
             }
@@ -172,7 +173,7 @@ class BookServiceE2ETest {
             // HTTP 400 is also acceptable for validation errors
             assertTrue(e.getMessage().contains("400") || e.getMessage().contains("Bad Request"),
                 "Should receive 400 Bad Request for invalid data");
-            log.testPass("B-E2E-005", "HTTP validation correctly rejected book without name");
+            logInfo("B-E2E-005: HTTP validation correctly rejected book without name");
         }
     }
 
@@ -194,7 +195,7 @@ class BookServiceE2ETest {
         // Verify it's a validation error (HTTP 400 or GraphQL validation error)
         assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
             "Should receive HTTP 400 Bad Request for negative price");
-        log.testPass("B-E2E-006", "STRICT validation correctly rejected negative price");
+        logInfo("B-E2E-006: STRICT validation correctly rejected negative price");
     }
 
     @Test
@@ -215,6 +216,7 @@ class BookServiceE2ETest {
         // Verify it's a validation error
         assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
             "Should receive HTTP 400 Bad Request for zero price");
-        log.testPass("B-E2E-007", "STRICT validation correctly rejected zero price");
+        logInfo("B-E2E-007: STRICT validation correctly rejected zero price");
     }
 }
+

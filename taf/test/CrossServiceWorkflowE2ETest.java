@@ -1,5 +1,6 @@
 package test;
 
+import base.BaseE2ETest;
 import client.RestClient;
 import config.TestConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,8 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Feature("Cross-Service Workflows")
 @Tag("e2e")
 @Tag("workflow")
-class CrossServiceWorkflowE2ETest {
-
+class CrossServiceWorkflowE2ETest extends BaseE2ETest {
     private static RestClient restClient;
     private static String baseUrl;
 
@@ -58,7 +58,7 @@ class CrossServiceWorkflowE2ETest {
             createdBookId = createdBook.get("id").asText();
             assertNotNull(createdBookId, "Created book should have an ID");
             assertEquals("Workflow Test Book", createdBook.get("name").asText());
-            System.out.println("✅ Step 1: Created book with ID: " + createdBookId);
+            logInfo("Step 1: Created book with ID: {}", createdBookId);
             
             // Step 2: Verify the book exists in the catalog
             String getAllBooksQuery = "{ \"query\": \"{ getAllBooks { id name description price } }\" }";
@@ -73,7 +73,7 @@ class CrossServiceWorkflowE2ETest {
                 }
             }
             assertTrue(bookFoundInCatalog, "Created book should appear in catalog");
-            System.out.println("✅ Step 2: Book verified in catalog");
+            logInfo("Step 2: Book verified in catalog");
             
             // Step 3: Place an order (using a known in-stock item since our created book might not have stock)
             String orderEndpoint = baseUrl + "/api/order";
@@ -96,10 +96,10 @@ class CrossServiceWorkflowE2ETest {
                 assertTrue(orderResponse.containsKey("status"), "Order response should contain status");
                 assertEquals("success", orderResponse.get("status"), "Order should succeed for known in-stock item");
                 
-                System.out.println("✅ Step 3: Order placed successfully - " + orderResponse.get("message"));
+                logInfo("Step 3: Order placed successfully - {}", orderResponse.get("message"));
             } catch (Exception e) {
                 // Order might fail due to infrastructure issues, but this is a workflow test
-                System.out.println("⚠️ Step 3: Order failed due to infrastructure issue - continuing workflow");
+                logWarning("Step 3: Order failed due to infrastructure issue - continuing workflow");
             }
             
             // Step 4: Delete the book
@@ -108,9 +108,9 @@ class CrossServiceWorkflowE2ETest {
             
             assertTrue(deleteResponse.has("data"), "Delete response should have data");
             assertTrue(deleteResponse.get("data").get("deleteBook").asBoolean(), "Book deletion should succeed");
-            System.out.println("✅ Step 4: Book deleted successfully");
+            logInfo("Step 4: Book deleted successfully");
             
-            System.out.println("🎉 WF-E2E-001: Complete book lifecycle workflow completed successfully!");
+            logInfo("WF-E2E-001: Complete book lifecycle workflow completed successfully!");
             
         } catch (Exception e) {
             if (createdBookId != null) {
@@ -145,7 +145,7 @@ class CrossServiceWorkflowE2ETest {
             Map<String, Object> createdAuthor = restClient.post(authorsEndpoint, newAuthor, new TypeReference<Map<String, Object>>() {});
             createdAuthorId = createdAuthor.get("id").toString();
             assertEquals("Workflow Test Author", createdAuthor.get("name"));
-            System.out.println("✅ Step 1: Created author with ID: " + createdAuthorId);
+            logInfo("Step 1: Created author with ID: {}", createdAuthorId);
             
             // Step 2: Create a new book
             String createBookMutation = "{ \"query\": \"mutation($book: BookRequest!) { createBook(bookRequest: $book) { id name description price } }\", \"variables\": { \"book\": { \"name\": \"Author Workflow Book\", \"description\": \"Book for author workflow test\", \"price\": 42.50 } } }";
@@ -155,7 +155,7 @@ class CrossServiceWorkflowE2ETest {
             JsonNode createdBook = createBookResponse.get("data").get("createBook");
             createdBookId = createdBook.get("id").asText();
             assertEquals("Author Workflow Book", createdBook.get("name").asText());
-            System.out.println("✅ Step 2: Created book with ID: " + createdBookId);
+            logInfo("Step 2: Created book with ID: {}", createdBookId);
             
             // Step 3: Query both to verify they exist
             // Query authors
@@ -176,7 +176,7 @@ class CrossServiceWorkflowE2ETest {
                 }
             }
             assertTrue(bookExists, "Created book should exist in books catalog");
-            System.out.println("✅ Step 3: Both author and book verified to exist");
+            logInfo("Step 3: Both author and book verified to exist");
             
             // Step 4: Place an order
             String orderEndpoint = baseUrl + "/api/order";
@@ -199,19 +199,19 @@ class CrossServiceWorkflowE2ETest {
                 assertTrue(orderResponse.containsKey("status"), "Order response should contain status");
                 assertEquals("success", orderResponse.get("status"), "Order should succeed for known in-stock item");
                 
-                System.out.println("✅ Step 4: Order placed successfully - " + orderResponse.get("message"));
+                logInfo("Step 4: Order placed successfully - {}", orderResponse.get("message"));
             } catch (Exception e) {
-                System.out.println("⚠️ Step 4: Order failed due to infrastructure issue - continuing workflow");
+                logWarning("Step 4: Order failed due to infrastructure issue - continuing workflow");
             }
             
             // Step 5: Delete the author
             String deleteAuthorEndpoint = authorsEndpoint + "/" + createdAuthorId;
             try {
                 restClient.delete(deleteAuthorEndpoint, String.class);
-                System.out.println("✅ Step 5: Author deleted successfully");
+                logInfo("Step 5: Author deleted successfully");
             } catch (Exception e) {
                 if (e.getMessage().contains("204") || e.getMessage().contains("200")) {
-                    System.out.println("✅ Step 5: Author deleted successfully");
+                    logInfo("Step 5: Author deleted successfully");
                 } else {
                     throw e;
                 }
@@ -221,9 +221,9 @@ class CrossServiceWorkflowE2ETest {
             String deleteBookMutation = "{ \"query\": \"mutation($id: ID!) { deleteBook(id: $id) }\", \"variables\": { \"id\": \"" + createdBookId + "\" } }";
             JsonNode deleteBookResponse = restClient.post(graphqlEndpoint, deleteBookMutation, JsonNode.class);
             assertTrue(deleteBookResponse.get("data").get("deleteBook").asBoolean(), "Book deletion should succeed");
-            System.out.println("✅ Step 6: Book deleted successfully");
+            logInfo("Step 6: Book deleted successfully");
             
-            System.out.println("🎉 WF-E2E-002: Author-Book relationship workflow completed successfully!");
+            logInfo("WF-E2E-002: Author-Book relationship workflow completed successfully!");
             
         } catch (Exception e) {
             // Cleanup
@@ -265,9 +265,9 @@ class CrossServiceWorkflowE2ETest {
         try {
             Map<String, Object> inStockResponse = restClient.post(orderEndpoint, inStockOrderRequest, new TypeReference<Map<String, Object>>() {});
             assertEquals("success", inStockResponse.get("status"), "In-stock item order should succeed");
-            System.out.println("✅ Step 1: In-stock item order placed successfully");
+            logInfo("Step 1: In-stock item order placed successfully");
         } catch (Exception e) {
-            System.out.println("⚠️ Step 1: In-stock item order failed (may be due to Stock Check Service being unavailable)");
+            logWarning("Step 1: In-stock item order failed (may be due to Stock Check Service being unavailable)");
         }
         
         // Step 2: Order out-of-stock item  
@@ -285,13 +285,13 @@ class CrossServiceWorkflowE2ETest {
         try {
             Map<String, Object> outOfStockResponse = restClient.post(orderEndpoint, outOfStockOrderRequest, new TypeReference<Map<String, Object>>() {});
             assertEquals("error", outOfStockResponse.get("status"), "Out-of-stock item order should fail");
-            System.out.println("✅ Step 2: Out-of-stock item order correctly failed");
+            logInfo("Step 2: Out-of-stock item order correctly failed");
         } catch (RuntimeException e) {
             // Expected for out-of-stock items
-            System.out.println("✅ Step 2: Out-of-stock item order correctly failed with exception");
+            logInfo("Step 2: Out-of-stock item order correctly failed with exception");
         }
         
-        System.out.println("🎉 WF-E2E-003: Order-based stock validation workflow completed!");
+        logInfo("WF-E2E-003: Order-based stock validation workflow completed!");
     }
 
     @Test
@@ -339,8 +339,8 @@ class CrossServiceWorkflowE2ETest {
         }
         
         assertTrue(orderFailed, "Order should fail for out-of-stock item");
-        System.out.println("✅ Step 1-2: Order correctly failed for out-of-stock item: " + errorMessage);
-        System.out.println("🎉 WF-E2E-004: Order failure handling workflow completed successfully!");
+        logInfo("Step 1-2: Order correctly failed for out-of-stock item: {}", errorMessage);
+        logInfo("WF-E2E-004: Order failure handling workflow completed successfully!");
     }
 
     @Test
@@ -361,7 +361,7 @@ class CrossServiceWorkflowE2ETest {
         
         assertTrue(authorException.getMessage().contains("400") || authorException.getMessage().contains("Bad Request"),
             "Should receive HTTP 400 for invalid author data");
-        System.out.println("✅ Step 1: Author with future birth date correctly rejected");
+        logInfo("Step 1: Author with future birth date correctly rejected");
         
         // Step 2: Try to create book with negative price - SHOULD FAIL
         String createInvalidBookMutation = "{ \"query\": \"mutation($book: BookRequest!) { createBook(bookRequest: $book) { id name description price } }\", \"variables\": { \"book\": { \"name\": \"Invalid Book\", \"description\": \"Test Description\", \"price\": -25.99 } } }";
@@ -373,7 +373,7 @@ class CrossServiceWorkflowE2ETest {
         
         assertTrue(bookException.getMessage().contains("400") || bookException.getMessage().contains("Bad Request"),
             "Should receive HTTP 400 for invalid book data");
-        System.out.println("✅ Step 2: Book with negative price correctly rejected");
+        logInfo("Step 2: Book with negative price correctly rejected");
         
         // Step 3: Try to place order with invalid data - SHOULD FAIL
         String orderEndpoint = baseUrl + "/api/order";
@@ -394,9 +394,9 @@ class CrossServiceWorkflowE2ETest {
         
         assertTrue(orderException.getMessage().contains("400") || orderException.getMessage().contains("Bad Request"),
             "Should receive HTTP 400 for invalid order data");
-        System.out.println("✅ Step 3: Order with invalid data correctly rejected");
+        logInfo("Step 3: Order with invalid data correctly rejected");
         
-        System.out.println("🎉 WF-E2E-005: Invalid data cascade workflow - all validations correctly enforced!");
+        logInfo("WF-E2E-005: Invalid data cascade workflow - all validations correctly enforced!");
     }
 
     @Test
@@ -414,7 +414,7 @@ class CrossServiceWorkflowE2ETest {
         Map<String, Object> createdAuthor = restClient.post(authorsEndpoint, validAuthor, new TypeReference<Map<String, Object>>() {});
         String authorId = createdAuthor.get("id").toString();
         assertEquals("Valid Integrity Author", createdAuthor.get("name"));
-        System.out.println("✅ Step 1: Created valid author with ID: " + authorId);
+        logInfo("Step 1: Created valid author with ID: {}", authorId);
         
         // Step 2: Create valid book
         String createValidBookMutation = "{ \"query\": \"mutation($book: BookRequest!) { createBook(bookRequest: $book) { id name description price } }\", \"variables\": { \"book\": { \"name\": \"Valid Integrity Book\", \"description\": \"Test Description\", \"price\": 45.99 } } }";
@@ -424,7 +424,7 @@ class CrossServiceWorkflowE2ETest {
         JsonNode createdBook = createBookResponse.get("data").get("createBook");
         String bookId = createdBook.get("id").asText();
         assertEquals(45.99, createdBook.get("price").asDouble(), 0.01);
-        System.out.println("✅ Step 2: Created valid book with ID: " + bookId);
+        logInfo("Step 2: Created valid book with ID: {}", bookId);
         
         // Step 3: Place valid order
         String orderEndpoint = baseUrl + "/api/order";
@@ -449,10 +449,10 @@ class CrossServiceWorkflowE2ETest {
             assertTrue(orderResponse.containsKey("message"), "Order response should contain message field");
             assertNotNull(orderResponse.get("message"), "Order message should not be null");
             
-            System.out.println("✅ Step 3: Valid order processed successfully - " + orderResponse.get("message"));
+            logInfo("Step 3: Valid order processed successfully - {}", orderResponse.get("message"));
         } catch (Exception e) {
             if (e.getMessage().contains("500") && e.getMessage().contains("stock")) {
-                System.out.println("✅ Step 3: Order failed due to stock check (infrastructure issue - acceptable behavior)");
+                logInfo("Step 3: Order failed due to stock check (infrastructure issue - acceptable behavior)");
                 // This is acceptable - Stock Check Service might be temporarily unavailable
             } else {
                 throw new AssertionError("Unexpected order failure: " + e.getMessage(), e);
@@ -464,11 +464,12 @@ class CrossServiceWorkflowE2ETest {
             restClient.delete(authorsEndpoint + "/" + authorId, String.class);
             String deleteBookMutation = "{ \"query\": \"mutation($id: ID!) { deleteBook(id: $id) }\", \"variables\": { \"id\": \"" + bookId + "\" } }";
             restClient.post(graphqlEndpoint, deleteBookMutation, JsonNode.class);
-            System.out.println("✅ Cleanup: Author and book deleted successfully");
+            logInfo("Cleanup: Author and book deleted successfully");
         } catch (Exception e) {
             System.err.println("Warning: Cleanup failed: " + e.getMessage());
         }
         
-        System.out.println("🎉 WF-E2E-006: Cross-service data integrity validation completed!");
+        logInfo("WF-E2E-006: Cross-service data integrity validation completed!");
     }
 }
+

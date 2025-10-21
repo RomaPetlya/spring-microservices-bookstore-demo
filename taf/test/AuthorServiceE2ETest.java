@@ -1,5 +1,6 @@
 package test;
 
+import base.BaseE2ETest;
 import client.RestClient;
 import config.TestConfig;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -25,8 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Feature("Author Service REST")
 @Tag("e2e")
 @Tag("rest")
-class AuthorServiceE2ETest {
-
+class AuthorServiceE2ETest extends BaseE2ETest {
     private static RestClient restClient;
     private static String baseUrl;
     private static final String AUTHORS_ENDPOINT = "/api/authors";
@@ -61,8 +61,8 @@ class AuthorServiceE2ETest {
         assertTrue(firstAuthor.containsKey("name"), "Author should have name field");
         assertTrue(firstAuthor.containsKey("birthDate"), "Author should have birthDate field");
         
-        System.out.println("âœ… A-E2E-001: Found " + authors.size() + " authors");
-        System.out.println("First author: " + firstAuthor.get("name"));
+        logInfo("A-E2E-001: Found {} authors", authors.size());
+        logDebug("First author: {}", firstAuthor.get("name"));
     }
 
     @Test
@@ -86,7 +86,7 @@ class AuthorServiceE2ETest {
         assertEquals("Test Author E2E", createdAuthor.get("name"), "Author name should match");
         assertNotNull(createdAuthor.get("birthDate"), "Author should have birth date");
         
-        System.out.println("âœ… A-E2E-002: Created author with ID: " + createdAuthor.get("id"));
+        logInfo("A-E2E-002: Created author with ID: {}", createdAuthor.get("id"));
     }
 
     @Test
@@ -109,11 +109,11 @@ class AuthorServiceE2ETest {
         
         try {
             restClient.delete(deleteEndpoint, String.class);
-            System.out.println("âœ… A-E2E-003: Successfully deleted author with ID: " + authorId);
+            logInfo("A-E2E-003: Successfully deleted author with ID: {}", authorId);
         } catch (Exception e) {
             // DELETE might return 200 or 204, both are acceptable
             if (e.getMessage().contains("204") || e.getMessage().contains("200")) {
-                System.out.println("âœ… A-E2E-003: Successfully deleted author with ID: " + authorId);
+                logInfo("A-E2E-003: Successfully deleted author with ID: {}", authorId);
             } else {
                 throw e;
             }
@@ -134,12 +134,12 @@ class AuthorServiceE2ETest {
         try {
             restClient.delete(deleteEndpoint, String.class);
             // If no exception, deletion was successful (might return 204)
-            log.testPass("A-E2E-004", "Delete operation completed for non-existent author");
+            logInfo("A-E2E-004: Delete operation completed for non-existent author");
         } catch (Exception e) {
             // 404 Not Found or 204 No Content are both acceptable
             assertTrue(e.getMessage().contains("404") || e.getMessage().contains("204") || e.getMessage().contains("200"),
                 "Should receive appropriate response for non-existent author deletion");
-            log.testPass("A-E2E-004", "Correctly handled deletion of non-existent author");
+            logInfo("A-E2E-004: Correctly handled deletion of non-existent author");
         }
     }
 
@@ -165,7 +165,7 @@ class AuthorServiceE2ETest {
             // Should receive 400 Bad Request for validation error
             assertTrue(e.getMessage().contains("400") || e.getMessage().contains("Bad Request"),
                 "Should receive validation error for invalid date format");
-            log.testPass("A-E2E-005", "Correctly rejected invalid date format");
+            logInfo("A-E2E-005: Correctly rejected invalid date format");
         }
     }
 
@@ -189,7 +189,7 @@ class AuthorServiceE2ETest {
         // Verify it's a validation error
         assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
             "Should receive HTTP 400 Bad Request for invalid future birth date");
-        log.testPass("A-E2E-006", "STRICT validation correctly rejected future birth date");
+        logInfo("A-E2E-006: STRICT validation correctly rejected future birth date");
     }
 
     @Test
@@ -212,7 +212,7 @@ class AuthorServiceE2ETest {
         // Verify it's a validation error
         assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
             "Should receive HTTP 400 Bad Request for null birth date");
-        log.testPass("A-E2E-007", "STRICT validation correctly rejected null birth date");
+        logInfo("A-E2E-007: STRICT validation correctly rejected null birth date");
     }
 
     @Test
@@ -235,6 +235,7 @@ class AuthorServiceE2ETest {
         // Verify it's a validation error
         assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
             "Should receive HTTP 400 Bad Request for empty name");
-        log.testPass("A-E2E-008", "STRICT validation correctly rejected empty name");
+        logInfo("A-E2E-008: STRICT validation correctly rejected empty name");
     }
 }
+
