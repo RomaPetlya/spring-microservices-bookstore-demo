@@ -61,7 +61,7 @@ class AuthorServiceE2ETest {
         assertTrue(firstAuthor.containsKey("name"), "Author should have name field");
         assertTrue(firstAuthor.containsKey("birthDate"), "Author should have birthDate field");
         
-        System.out.println("✅ A-E2E-001: Found " + authors.size() + " authors");
+        System.out.println("âœ… A-E2E-001: Found " + authors.size() + " authors");
         System.out.println("First author: " + firstAuthor.get("name"));
     }
 
@@ -86,7 +86,7 @@ class AuthorServiceE2ETest {
         assertEquals("Test Author E2E", createdAuthor.get("name"), "Author name should match");
         assertNotNull(createdAuthor.get("birthDate"), "Author should have birth date");
         
-        System.out.println("✅ A-E2E-002: Created author with ID: " + createdAuthor.get("id"));
+        System.out.println("âœ… A-E2E-002: Created author with ID: " + createdAuthor.get("id"));
     }
 
     @Test
@@ -109,11 +109,11 @@ class AuthorServiceE2ETest {
         
         try {
             restClient.delete(deleteEndpoint, String.class);
-            System.out.println("✅ A-E2E-003: Successfully deleted author with ID: " + authorId);
+            System.out.println("âœ… A-E2E-003: Successfully deleted author with ID: " + authorId);
         } catch (Exception e) {
             // DELETE might return 200 or 204, both are acceptable
             if (e.getMessage().contains("204") || e.getMessage().contains("200")) {
-                System.out.println("✅ A-E2E-003: Successfully deleted author with ID: " + authorId);
+                System.out.println("âœ… A-E2E-003: Successfully deleted author with ID: " + authorId);
             } else {
                 throw e;
             }
@@ -134,12 +134,12 @@ class AuthorServiceE2ETest {
         try {
             restClient.delete(deleteEndpoint, String.class);
             // If no exception, deletion was successful (might return 204)
-            System.out.println("✅ A-E2E-004: Delete operation completed for non-existent author");
+            log.testPass("A-E2E-004", "Delete operation completed for non-existent author");
         } catch (Exception e) {
             // 404 Not Found or 204 No Content are both acceptable
             assertTrue(e.getMessage().contains("404") || e.getMessage().contains("204") || e.getMessage().contains("200"),
                 "Should receive appropriate response for non-existent author deletion");
-            System.out.println("✅ A-E2E-004: Correctly handled deletion of non-existent author");
+            log.testPass("A-E2E-004", "Correctly handled deletion of non-existent author");
         }
     }
 
@@ -165,15 +165,15 @@ class AuthorServiceE2ETest {
             // Should receive 400 Bad Request for validation error
             assertTrue(e.getMessage().contains("400") || e.getMessage().contains("Bad Request"),
                 "Should receive validation error for invalid date format");
-            System.out.println("✅ A-E2E-005: Correctly rejected invalid date format");
+            log.testPass("A-E2E-005", "Correctly rejected invalid date format");
         }
     }
 
     @Test
     @Story("Author Validation")
-    @DisplayName("A-E2E-006: Create author with future birth date")
-    @Description("Attempt to create an author with future birth date")
-    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("A-E2E-006: Create author with future birth date - STRICT")
+    @Description("Attempt to create an author with future birth date - system MUST reject this")
+    @Severity(SeverityLevel.CRITICAL)
     void testCreateAuthorWithFutureDate() {
         // Given
         String endpoint = baseUrl + AUTHORS_ENDPOINT;
@@ -181,20 +181,60 @@ class AuthorServiceE2ETest {
         futureAuthor.put("name", "Future Date Author");
         futureAuthor.put("birthDate", new int[]{2050, 1, 1}); // Future date
         
-        // When
-        try {
-            Map<String, Object> createdAuthor = restClient.post(endpoint, futureAuthor, new TypeReference<Map<String, Object>>() {});
-            
-            // System might allow future dates - this is a business rule decision
-            assertNotNull(createdAuthor, "Author creation response should not be null");
-            assertEquals("Future Date Author", createdAuthor.get("name"), "Author name should match");
-            System.out.println("⚠️ A-E2E-006: System allows future birth dates - business rule to review");
-            
-        } catch (Exception e) {
-            // 400 Bad Request is also acceptable if business rules prevent future dates
-            assertTrue(e.getMessage().contains("400") || e.getMessage().contains("Bad Request"),
-                "Should receive validation error for future date");
-            System.out.println("✅ A-E2E-006: Correctly rejected future birth date");
-        }
+        // When & Then
+        Exception exception = assertThrows(Exception.class, () -> {
+            restClient.post(endpoint, futureAuthor, new TypeReference<Map<String, Object>>() {});
+        }, "System MUST reject authors with future birth dates");
+        
+        // Verify it's a validation error
+        assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
+            "Should receive HTTP 400 Bad Request for invalid future birth date");
+        log.testPass("A-E2E-006", "STRICT validation correctly rejected future birth date");
+    }
+
+    @Test
+    @Story("Author Validation")
+    @DisplayName("A-E2E-007: Create author with null birth date - STRICT")
+    @Description("Attempt to create an author with null birth date - system MUST reject this")
+    @Severity(SeverityLevel.CRITICAL)
+    void testCreateAuthorWithNullBirthDate() {
+        // Given
+        String endpoint = baseUrl + AUTHORS_ENDPOINT;
+        Map<String, Object> invalidAuthor = new HashMap<>();
+        invalidAuthor.put("name", "Author Without Birth Date");
+        invalidAuthor.put("birthDate", null); // Null birth date
+        
+        // When & Then
+        Exception exception = assertThrows(Exception.class, () -> {
+            restClient.post(endpoint, invalidAuthor, new TypeReference<Map<String, Object>>() {});
+        }, "System MUST reject authors with null birth dates");
+        
+        // Verify it's a validation error
+        assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
+            "Should receive HTTP 400 Bad Request for null birth date");
+        log.testPass("A-E2E-007", "STRICT validation correctly rejected null birth date");
+    }
+
+    @Test
+    @Story("Author Validation")
+    @DisplayName("A-E2E-008: Create author with empty name - STRICT")
+    @Description("Attempt to create an author with empty name - system MUST reject this")
+    @Severity(SeverityLevel.CRITICAL)
+    void testCreateAuthorWithEmptyName() {
+        // Given
+        String endpoint = baseUrl + AUTHORS_ENDPOINT;
+        Map<String, Object> invalidAuthor = new HashMap<>();
+        invalidAuthor.put("name", ""); // Empty name
+        invalidAuthor.put("birthDate", new int[]{1980, 1, 1});
+        
+        // When & Then
+        Exception exception = assertThrows(Exception.class, () -> {
+            restClient.post(endpoint, invalidAuthor, new TypeReference<Map<String, Object>>() {});
+        }, "System MUST reject authors with empty names");
+        
+        // Verify it's a validation error
+        assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
+            "Should receive HTTP 400 Bad Request for empty name");
+        log.testPass("A-E2E-008", "STRICT validation correctly rejected empty name");
     }
 }

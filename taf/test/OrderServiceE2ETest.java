@@ -61,17 +61,17 @@ class OrderServiceE2ETest {
         
         // Then
         assertNotNull(response, "Order response should not be null");
-        // Response format may vary - check for success indicators
-        if (response.containsKey("status")) {
-            assertEquals("success", response.get("status"), "Order should be successful");
-        }
-        if (response.containsKey("message")) {
-            String message = response.get("message").toString();
-            assertTrue(message.contains("success") || message.contains("placed"), 
-                "Success message should indicate order was placed");
-        }
+        // STRICT validation: response MUST contain status field
+        assertTrue(response.containsKey("status"), "Order response MUST contain status field");
+        assertEquals("success", response.get("status"), "Order should be successful for in-stock item");
         
-        System.out.println("✅ O-E2E-001: Successfully placed order for in-stock item");
+        // Verify message field exists and contains meaningful content
+        assertTrue(response.containsKey("message"), "Order response MUST contain message field");
+        String message = response.get("message").toString();
+        assertTrue(message.contains("success") || message.contains("placed"), 
+            "Success message should indicate order was placed");
+        
+        System.out.println("âœ… O-E2E-001: Successfully placed order for in-stock item - " + message);
     }
 
     @Test
@@ -98,22 +98,23 @@ class OrderServiceE2ETest {
         try {
             Map<String, Object> response = restClient.post(endpoint, orderRequest, new TypeReference<Map<String, Object>>() {});
             
-            // If response is returned, check for error status
-            if (response.containsKey("status")) {
-                assertEquals("error", response.get("status"), "Order should fail for out-of-stock item");
-            }
-            if (response.containsKey("message")) {
-                String message = response.get("message").toString().toLowerCase();
-                assertTrue(message.contains("out of stock") || message.contains("unavailable"), 
-                    "Error message should indicate item is out of stock");
-            }
-            System.out.println("✅ O-E2E-002: Correctly handled out-of-stock order attempt");
+            // If response is returned (not exception), it MUST have error status
+            assertNotNull(response, "Response should not be null");
+            assertTrue(response.containsKey("status"), "Response MUST contain status field");
+            assertEquals("error", response.get("status"), "Order should fail for out-of-stock item");
+            
+            assertTrue(response.containsKey("message"), "Response MUST contain message field");
+            String message = response.get("message").toString().toLowerCase();
+            assertTrue(message.contains("out of stock") || message.contains("unavailable") || message.contains("not in stock"), 
+                "Error message should indicate item is out of stock");
+            
+            System.out.println("âœ… O-E2E-002: Correctly handled out-of-stock order - " + response.get("message"));
             
         } catch (Exception e) {
             // 500 Internal Server Error is expected for business rule violations
             assertTrue(e.getMessage().contains("500") || e.getMessage().contains("Internal Server Error"),
                 "Should receive 500 error for out-of-stock item order");
-            System.out.println("✅ O-E2E-002: Correctly returned 500 error for out-of-stock item");
+            System.out.println("âœ… O-E2E-002: Correctly returned 500 error for out-of-stock item");
         }
     }
 
@@ -150,21 +151,22 @@ class OrderServiceE2ETest {
             Map<String, Object> response = restClient.post(endpoint, orderRequest, new TypeReference<Map<String, Object>>() {});
             
             // Should return error status for mixed stock
-            if (response.containsKey("status")) {
-                assertEquals("error", response.get("status"), "Order should fail when some items are out of stock");
-            }
-            if (response.containsKey("message")) {
-                String message = response.get("message").toString().toLowerCase();
-                assertTrue(message.contains("out of stock") || message.contains("unavailable"), 
-                    "Error message should indicate some items are out of stock");
-            }
-            System.out.println("✅ O-E2E-003: Correctly handled mixed stock order");
+            assertNotNull(response, "Response should not be null");
+            assertTrue(response.containsKey("status"), "Response MUST contain status field");
+            assertEquals("error", response.get("status"), "Order should fail when some items are out of stock");
+            
+            assertTrue(response.containsKey("message"), "Response MUST contain message field");
+            String message = response.get("message").toString().toLowerCase();
+            assertTrue(message.contains("out of stock") || message.contains("unavailable") || message.contains("not in stock"), 
+                "Error message should indicate some items are out of stock");
+            
+            System.out.println("âœ… O-E2E-003: Correctly handled mixed stock order - " + response.get("message"));
             
         } catch (Exception e) {
             // 500 error is expected for business rule violations
             assertTrue(e.getMessage().contains("500"),
                 "Should receive 500 error for mixed stock order");
-            System.out.println("✅ O-E2E-003: Correctly returned 500 error for mixed stock order");
+            System.out.println("âœ… O-E2E-003: Correctly returned 500 error for mixed stock order");
         }
     }
 
@@ -197,15 +199,15 @@ class OrderServiceE2ETest {
             // Should receive 400 Bad Request for validation error
             assertTrue(e.getMessage().contains("400") || e.getMessage().contains("Bad Request"),
                 "Should receive 400 Bad Request for missing SKU");
-            System.out.println("✅ O-E2E-004: Correctly rejected order with missing SKU");
+            System.out.println("âœ… O-E2E-004: Correctly rejected order with missing SKU");
         }
     }
 
     @Test
     @Story("Order Validation")
-    @DisplayName("O-E2E-005: Place order with zero quantity")
-    @Description("Attempt to place an order with zero quantity")
-    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("O-E2E-005: Place order with zero quantity - STRICT")
+    @Description("Attempt to place an order with zero quantity - system MUST reject this")
+    @Severity(SeverityLevel.CRITICAL)
     void testPlaceOrderWithZeroQuantity() {
         // Given
         String endpoint = baseUrl + ORDER_ENDPOINT;
@@ -222,20 +224,13 @@ class OrderServiceE2ETest {
         orderRequest.put("orderLineItemsDtoList", orderLineItems);
         
         // When & Then
-        try {
-            Map<String, Object> response = restClient.post(endpoint, orderRequest, new TypeReference<Map<String, Object>>() {});
-            
-            // If response is returned, it should indicate an error
-            if (response.containsKey("status")) {
-                assertEquals("error", response.get("status"), "Order should fail for zero quantity");
-            }
-            System.out.println("⚠️ O-E2E-005: System allows zero quantity - business rule to review");
-            
-        } catch (Exception e) {
-            // 400 Bad Request or 500 Internal Server Error are both acceptable
-            assertTrue(e.getMessage().contains("400") || e.getMessage().contains("500"),
-                "Should receive error for zero quantity order");
-            System.out.println("✅ O-E2E-005: Correctly rejected order with zero quantity");
-        }
+        Exception exception = assertThrows(Exception.class, () -> {
+            restClient.post(endpoint, orderRequest, new TypeReference<Map<String, Object>>() {});
+        }, "System MUST reject orders with zero quantity");
+        
+        // Verify it's a validation error
+        assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
+            "Should receive HTTP 400 Bad Request for zero quantity");
+        System.out.println("âœ… O-E2E-005: STRICT validation correctly rejected order with zero quantity");
     }
 }

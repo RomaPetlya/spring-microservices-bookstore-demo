@@ -61,7 +61,7 @@ class BookServiceE2ETest {
         assertTrue(firstBook.has("name"), "Book should have name field");
         assertTrue(firstBook.has("price"), "Book should have price field");
         
-        System.out.println("✅ B-E2E-001: Found " + books.size() + " books in catalog");
+        System.out.println("âœ… B-E2E-001: Found " + books.size() + " books in catalog");
     }
 
     @Test
@@ -90,7 +90,7 @@ class BookServiceE2ETest {
         assertEquals("Test Description for E2E", createdBook.get("description").asText(), "Book description should match");
         assertEquals(19.99, createdBook.get("price").asDouble(), 0.01, "Book price should match");
         
-        System.out.println("✅ B-E2E-002: Created book with ID: " + createdBook.get("id").asText());
+        System.out.println("âœ… B-E2E-002: Created book with ID: " + createdBook.get("id").asText());
     }
 
     @Test
@@ -118,7 +118,7 @@ class BookServiceE2ETest {
         assertTrue(data.has("deleteBook"), "Data should contain 'deleteBook' field");
         assertTrue(data.get("deleteBook").asBoolean(), "Delete operation should return true");
         
-        System.out.println("✅ B-E2E-003: Successfully deleted book with ID: " + bookIdToDelete);
+        System.out.println("âœ… B-E2E-003: Successfully deleted book with ID: " + bookIdToDelete);
     }
 
     @Test
@@ -143,7 +143,7 @@ class BookServiceE2ETest {
         assertTrue(data.has("deleteBook"), "Data should contain 'deleteBook' field");
         assertFalse(data.get("deleteBook").asBoolean(), "Delete operation should return false for non-existent book");
         
-        System.out.println("✅ B-E2E-004: Correctly handled deletion of non-existent book");
+        log.testPass("B-E2E-004", "Correctly handled deletion of non-existent book");
     }
 
     @Test
@@ -164,7 +164,7 @@ class BookServiceE2ETest {
             if (response.has("errors")) {
                 assertTrue(response.get("errors").isArray(), "Errors should be an array");
                 assertTrue(response.get("errors").size() > 0, "Should have validation errors");
-                System.out.println("✅ B-E2E-005: GraphQL validation correctly rejected book without name");
+                log.testPass("B-E2E-005", "GraphQL validation correctly rejected book without name");
             } else {
                 fail("Expected GraphQL validation errors for book without name");
             }
@@ -172,39 +172,49 @@ class BookServiceE2ETest {
             // HTTP 400 is also acceptable for validation errors
             assertTrue(e.getMessage().contains("400") || e.getMessage().contains("Bad Request"),
                 "Should receive 400 Bad Request for invalid data");
-            System.out.println("✅ B-E2E-005: HTTP validation correctly rejected book without name");
+            log.testPass("B-E2E-005", "HTTP validation correctly rejected book without name");
         }
     }
 
     @Test
     @Story("Book Validation")
-    @DisplayName("B-E2E-006: Create book with negative price")
-    @Description("Attempt to create a book with negative price")
-    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("B-E2E-006: Create book with negative price - STRICT")
+    @Description("Attempt to create a book with negative price - system MUST reject this")
+    @Severity(SeverityLevel.CRITICAL)
     void testCreateBookWithNegativePrice() {
         // Given
         String invalidMutation = "{ \"query\": \"mutation($book: BookRequest!) { createBook(bookRequest: $book) { id name description price } }\", \"variables\": { \"book\": { \"name\": \"Negative Price Book\", \"description\": \"Test Description\", \"price\": -19.99 } } }";
         String endpoint = baseUrl + GRAPHQL_ENDPOINT;
         
-        // When
-        try {
-            JsonNode response = restClient.post(endpoint, invalidMutation, JsonNode.class);
-            
-            // Check if there are validation errors
-            if (response.has("errors")) {
-                assertTrue(response.get("errors").isArray(), "Errors should be an array");
-                System.out.println("✅ B-E2E-006: GraphQL validation correctly rejected negative price");
-            } else if (response.has("data") && response.get("data").has("createBook")) {
-                // Some implementations might allow negative prices, so this is also valid
-                JsonNode createdBook = response.get("data").get("createBook");
-                assertEquals(-19.99, createdBook.get("price").asDouble(), 0.01);
-                System.out.println("⚠️ B-E2E-006: System allows negative prices - this might be a business rule to review");
-            }
-        } catch (Exception e) {
-            // HTTP 400 is acceptable for validation errors
-            assertTrue(e.getMessage().contains("400") || e.getMessage().contains("Bad Request"),
-                "Should receive validation error for negative price");
-            System.out.println("✅ B-E2E-006: HTTP validation correctly rejected negative price");
-        }
+        // When & Then
+        Exception exception = assertThrows(Exception.class, () -> {
+            restClient.post(endpoint, invalidMutation, JsonNode.class);
+        }, "System MUST reject books with negative prices");
+        
+        // Verify it's a validation error (HTTP 400 or GraphQL validation error)
+        assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
+            "Should receive HTTP 400 Bad Request for negative price");
+        log.testPass("B-E2E-006", "STRICT validation correctly rejected negative price");
+    }
+
+    @Test
+    @Story("Book Validation")
+    @DisplayName("B-E2E-007: Create book with zero price - STRICT")
+    @Description("Attempt to create a book with zero price - system MUST reject this")
+    @Severity(SeverityLevel.CRITICAL)
+    void testCreateBookWithZeroPrice() {
+        // Given
+        String invalidMutation = "{ \"query\": \"mutation($book: BookRequest!) { createBook(bookRequest: $book) { id name description price } }\", \"variables\": { \"book\": { \"name\": \"Zero Price Book\", \"description\": \"Test Description\", \"price\": 0.0 } } }";
+        String endpoint = baseUrl + GRAPHQL_ENDPOINT;
+        
+        // When & Then
+        Exception exception = assertThrows(Exception.class, () -> {
+            restClient.post(endpoint, invalidMutation, JsonNode.class);
+        }, "System MUST reject books with zero price");
+        
+        // Verify it's a validation error
+        assertTrue(exception.getMessage().contains("400") || exception.getMessage().contains("Bad Request"),
+            "Should receive HTTP 400 Bad Request for zero price");
+        log.testPass("B-E2E-007", "STRICT validation correctly rejected zero price");
     }
 }
